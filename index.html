@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Database</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        .card {
+            transition: transform 0.2s;
+            margin-bottom: 20px;
+            height: 100%;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        .album-cover {
+            height: 180px;
+            object-fit: cover;
+        }
+        .artist-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 0 auto;
+            display: block;
+        }
+        .navbar-brand {
+            font-weight: bold;
+        }
+        .stats-card {
+            text-align: center;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            color: white;
+        }
+        .stats-card i {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        .search-box {
+            max-width: 500px;
+            margin: 20px auto;
+        }
+        .player {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #f8f9fa;
+            padding: 15px;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+        .now-playing {
+            display: flex;
+            align-items: center;
+        }
+        .now-playing img {
+            width: 50px;
+            height: 50px;
+            margin-right: 15px;
+            border-radius: 5px;
+        }
+        .song-info h6 {
+            margin: 0;
+            font-weight: bold;
+        }
+        .song-info p {
+            margin: 0;
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+        .controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .controls button {
+            margin: 0 10px;
+            border: none;
+            background: none;
+            font-size: 1.5rem;
+            color: #0d6efd;
+        }
+        .progress {
+            height: 5px;
+            margin: 10px 0;
+            background-color: #e9ecef;
+        }
+        .progress-bar {
+            background-color: #0d6efd;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-music-note-beamed me-2"></i>Music Database
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#" data-section="home">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-section="artists">Artists</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-section="albums">Albums</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-section="playlists">Playlists</a>
+                    </li>
+                </ul>
+                <div class="d-flex">
+                    <div class="input-group">
+                        <input type="text" id="searchInput" class="form-control" placeholder="Search...">
+                        <button class="btn btn-outline-light" type="button" id="searchButton">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                    <div class="ms-3" id="authButtons">
+                        <button class="btn btn-outline-light me-2" data-bs-toggle="modal" data-bs-target="#loginModal">Login</button>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#registerModal">Register</button>
+                    </div>
+                    <div class="dropdown ms-3 d-none" id="userMenu">
+                        <button class="btn btn-outline-light dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle me-1"></i> <span id="usernameDisplay"></span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#" data-section="profile">My Profile</a></li>
+                            <li><a class="dropdown-item" href="#" data-section="my-playlists">My Playlists</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="#" id="logoutButton">Logout</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container my-4">
+        <!-- Home Section -->
+        <div id="homeSection">
+            <div class="row mb-4">
+                <div class="col-12 text-center">
+                    <h1 class="display-4 mb-4">Welcome to Music Database</h1>
+                    <p class="lead">Discover and listen to your favorite music</p>
+                    <div class="search-box mx-auto">
+                        <div class="input-group">
+                            <input type="text" class="form-control form-control-lg" placeholder="Search for artists, albums, or songs...">
+                            <button class="btn btn-primary" type="button">
+                                <i class="bi bi-search"></i> Search
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistics -->
+            <div class="row mb-5" id="statsContainer">
+                <!-- Stats will be loaded here -->
+            </div>
+
+            <!-- Popular Artists -->
+            <div class="row mb-4">
+                <div class="col-12 d-flex justify-content-between align-items-center mb-3">
+                    <h2>Popular Artists</h2>
+                    <a href="#" class="btn btn-outline-primary btn-sm" data-section="artists">View All</a>
+                </div>
+                <div class="row" id="artistsContainer">
+                    <!-- Artists will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Recent Albums -->
+            <div class="row">
+                <div class="col-12 d-flex justify-content-between align-items-center mb-3">
+                    <h2>Recent Albums</h2>
+                    <a href="#" class="btn btn-outline-primary btn-sm" data-section="albums">View All</a>
+                </div>
+                <div class="row" id="albumsContainer">
+                    <!-- Albums will be loaded here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Artists Section -->
+        <div id="artistsSection" class="d-none">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Artists</h2>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addArtistModal">
+                    <i class="bi bi-plus-lg"></i> Add Artist
+                </button>
+            </div>
+            <div class="row" id="allArtistsContainer">
+                <!-- All artists will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Albums Section -->
+        <div id="albumsSection" class="d-none">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Albums</h2>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addAlbumModal">
+                    <i class="bi bi-plus-lg"></i> Add Album
+                </button>
+            </div>
+            <div class="row" id="allAlbumsContainer">
+                <!-- All albums will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Playlists Section -->
+        <div id="playlistsSection" class="d-none">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>My Playlists</h2>
+                <button class="btn btn-primary" id="createPlaylistBtn">
+                    <i class="bi bi-plus-lg"></i> Create Playlist
+                </button>
+            </div>
+            <div class="row" id="playlistsContainer">
+                <!-- Playlists will be loaded here -->
+                <div class="col-12 text-center">
+                    <p class="text-muted">You don't have any playlists yet. Create one to get started!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search Results -->
+        <div id="searchResultsSection" class="d-none">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Search Results for "<span id="searchQuery"></span>"</h2>
+                <button class="btn btn-outline-secondary" id="clearSearch">
+                    <i class="bi bi-x-lg"></i> Clear Search
+                </button>
+            </div>
+            
+            <div class="mb-5">
+                <h4>Artists</h4>
+                <div class="row" id="searchArtistsContainer">
+                    <!-- Search results for artists will be loaded here -->
+                    <div class="col-12">
+                        <p class="text-muted">No artists found</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mb-5">
+                <h4>Albums</h4>
+                <div class="row" id="searchAlbumsContainer">
+                    <!-- Search results for albums will be loaded here -->
+                    <div class="col-12">
+                        <p class="text-muted">No albums found</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <h4>Songs</h4>
+                <div class="list-group" id="searchSongsContainer">
+                    <!-- Search results for songs will be loaded here -->
+                    <div class="list-group-item">
+                        <p class="text-muted mb-0">No songs found</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audio Player -->
+    <div class="player d-none" id="audioPlayer">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-4">
+                    <div class="now-playing">
+                        <img src="https://via.placeholder.com/50" alt="Album Art" id="nowPlayingArt">
+                        <div class="song-info">
+                            <h6 id="nowPlayingTitle">Song Title</h6>
+                            <p id="nowPlayingArtist">Artist Name</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="controls text-center">
+                        <button id="prevBtn"><i class="bi bi-skip-start-fill"></i></button>
+                        <button id="playPauseBtn"><i class="bi bi-play-fill"></i></button>
+                        <button id="nextBtn"><i class="bi bi-skip-end-fill"></i></button>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <small id="currentTime">0:00</small>
+                        <small id="duration">0:00</small>
+                    </div>
+                </div>
+                <div class="col-md-4 text-end">
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-heart"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-share"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" id="queueBtn">
+                            <i class="bi"></i> Queue
+                        </button>
+                    </div>
+                    <div class="volume-control mt-2 d-flex align-items-center justify-content-end">
+                        <i class="bi bi-volume-down"></i>
+                        <input type="range" class="form-range ms-2" min="0" max="1" step="0.01" value="0.5" id="volumeControl" style="width: 100px;">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <audio id="audioElement"></audio>
+    </div>
+
+    <!-- Modals -->
+    <!-- Login Modal -->
+    <div class="modal fade" id="loginModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Login</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="loginForm">
+                        <div class="mb-3">
+                            <label for="loginEmail" class="form-label">Email address</label>
+                            <input type="email" class="form-control" id="loginEmail" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="loginPassword" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="loginPassword" required>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Login</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div class="modal fade" id="registerModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Create Account</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="registerForm">
+                        <div class="mb-3">
+                            <label for="registerUsername" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="registerUsername" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="registerEmail" class="form-label">Email address</label>
+                            <input type="email" class="form-control" id="registerEmail" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="registerPassword" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="registerPassword" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="confirmPassword" class="form-label">Confirm Password</label>
+                            <input type="password" class="form-control" id="confirmPassword" required>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Register</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Artist Modal -->
+    <div class="modal fade" id="addArtistModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add New Artist</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addArtistForm">
+                        <div class="mb-3">
+                            <label for="artistName" class="form-label">Artist Name</label>
+                            <input type="text" class="form-control" id="artistName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="artistCountry" class="form-label">Country</label>
+                            <input type="text" class="form-control" id="artistCountry">
+                        </div>
+                        <div class="mb-3">
+                            <label for="artistYear" class="form-label">Year Formed</label>
+                            <input type="number" class="form-control" id="artistYear">
+                        </div>
+                        <div class="mb-3">
+                            <label for="artistBio" class="form-label">Biography</label>
+                            <textarea class="form-control" id="artistBio" rows="3"></textarea>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Add Artist</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Album Modal -->
+    <div class="modal fade" id="addAlbumModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add New Album</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addAlbumForm">
+                        <div class="mb-3">
+                            <label for="albumTitle" class="form-label">Album Title</label>
+                            <input type="text" class="form-control" id="albumTitle" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="albumArtist" class="form-label">Artist</label>
+                            <select class="form-select" id="albumArtist" required>
+                                <option value="" selected disabled>Select an artist</option>
+                                <!-- Artists will be loaded here -->
+                            </select>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="albumYear" class="form-label">Release Year</label>
+                                <input type="number" class="form-control" id="albumYear">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="albumGenre" class="form-label">Genre</label>
+                                <input type="text" class="form-control" id="albumGenre">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="albumCover" class="form-label">Cover Image URL</label>
+                            <input type="url" class="form-control" id="albumCover">
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Add Album</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // API Configuration
+        const API_BASE_URL = 'http://localhost:3001/api';
+        
+        // DOM Elements
+        const sections = {
+            home: document.getElementById('homeSection'),
+            artists: document.getElementById('artistsSection'),
+            albums: document.getElementById('albumsSection'),
+            playlists: document.getElementById('playlistsSection'),
+            search: document.getElementById('searchResultsSection')
+        };
+        
+        // State
+        let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
+        let currentAudio = null;
+        
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuthState();
+            loadHomeData();
+            setupEventListeners();
+        });
+        
+        // Check authentication state
+        function checkAuthState() {
+            const token = localStorage.getItem('token');
+            const authButtons = document.getElementById('authButtons');
+            const userMenu = document.getElementById('userMenu');
+            
+            if (token && currentUser) {
+                authButtons.classList.add('d-none');
+                userMenu.classList.remove('d-none');
+                document.getElementById('usernameDisplay').textContent = currentUser.username;
+            } else {
+                authButtons.classList.remove('d-none');
+                userMenu.classList.add('d-none');
+            }
+        }
+        
+        // Setup event listeners
+        function setupEventListeners() {
+            // Navigation
+            document.querySelectorAll('[data-section]').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const section = link.getAttribute('data-section');
+                    showSection(section);
+                });
+            });
+            
+            // Login form
+            document.getElementById('loginForm')?.addEventListener('submit', handleLogin);
+            
+            // Register form
+            document.getElementById('registerForm')?.addEventListener('submit', handleRegister);
+            
+            // Logout
+            document.getElementById('logoutButton')?.addEventListener('click', handleLogout);
+            
+            // Search
+            document.getElementById('searchButton')?.addEventListener('click', handleSearch);
+            document.getElementById('searchInput')?.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') handleSearch();
+            });
+            
+            // Clear search
+            document.getElementById('clearSearch')?.addEventListener('click', () => {
+                showSection('home');
+            });
+            
+            // Add artist form
+            document.getElementById('addArtistForm')?.addEventListener('submit', handleAddArtist);
+            
+            // Add album form
+            document.getElementById('addAlbumForm')?.addEventListener('submit', handleAddAlbum);
+            
+            // Audio player controls
+            setupAudioPlayer();
+        }
+        
+        // Show a specific section
+        function showSection(section) {
+            // Hide all sections first
+            Object.values(sections).forEach(sec => {
+                if (sec) sec.classList.add('d-none');
+            });
+            
+            // Show the selected section
+            if (sections[section]) {
+                sections[section].classList.remove('d-none');
+                
+                // Load section-specific data
+                switch(section) {
+                    case 'artists':
+                        loadArtists();
+                        break;
+                    case 'albums':
+                        loadAlbums();
+                        break;
+                    case 'playlists':
+                        loadPlaylists();
+                        break;
+                    case 'home':
+                        loadHomeData();
+                        break;
+                }
+            } else {
+                // Default to home if section not found
+                sections.home.classList.remove('d-none');
+            }
+            
+            // Update active nav link
+            document.querySelectorAll('.nav-link').forEach(link => {
+                if (link.getAttribute('data-section') === section) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+        }
+        
+        // Load home page data (statistics, popular artists, recent albums)
+        async function loadHomeData() {
+            try {
+                // Load statistics
+                const statsResponse = await fetch(`${API_BASE_URL}/statistics`);
+                const statsData = await statsResponse.json();
+                
+                // Display statistics
+                const statsContainer = document.getElementById('statsContainer');
+                if (statsContainer) {
+                    statsContainer.innerHTML = `
+                        <div class="col-md-2 col-6">
+                            <div class="stats-card bg-primary">
+                                <i class="bi bi-people"></i>
+                                <h3>${statsData.totalArtists}</h3>
+                                <p>Artists</p>
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-6">
+                            <div class="stats-card bg-success">
+                                <i class="bi bi-disc"></i>
+                                <h3>${statsData.totalAlbums}</h3>
+                                <p>Albums</p>
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-6">
+                            <div class="stats-card bg-info">
+                                <i class="bi bi-music-note-list"></i>
+                                <h3>${statsData.totalSongs}</h3>
+                                <p>Songs</p>
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-6">
+                            <div class="stats-card bg-warning">
+                                <i class="bi bi-person"></i>
+                                <h3>${statsData.totalUsers}</h3>
+                                <p>Users</p>
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-6">
+                            <div class="stats-card bg-danger">
+                                <i class="bi bi-collection-play"></i>
+                                <h3>${statsData.totalPlaylists}</h3>
+                                <p>Playlists</p>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                // Display popular artists
+                const artistsContainer = document.getElementById('artistsContainer');
+                if (artistsContainer) {
+                    artistsContainer.innerHTML = statsData.popularArtists.map(artist => `
+                        <div class="col-md-3 col-6 mb-4">
+                            <div class="card h-100">
+                                <img src="https://via.placeholder.com/300" class="card-img-top" alt="${artist.name}">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">${artist.name}</h5>
+                                    <p class="card-text text-muted">${artist.song_count} songs</p>
+                                    <button class="btn btn-outline-primary btn-sm" onclick="viewArtist(${artist.artist_id})">View Artist</button>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+                
+                // Display recent albums
+                const albumsContainer = document.getElementById('albumsContainer');
+                if (albumsContainer) {
+                    albumsContainer.innerHTML = statsData.recentAlbums.map(album => `
+                        <div class="col-md-3 col-6 mb-4">
+                            <div class="card h-100">
+                                <img src="${album.cover_image_url || 'https://via.placeholder.com/300'}" class="card-img-top album-cover" alt="${album.title}">
+                                <div class="card-body">
+                                    <h5 class="card-title">${album.title}</h5>
+                                    <p class="card-text text-muted">${album.artist_name} • ${album.release_year}</p>
+                                    <button class="btn btn-outline-primary btn-sm" onclick="viewAlbum(${album.album_id})">View Album</button>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+                
+            } catch (error) {
+                console.error('Error loading home data:', error);
+                showAlert('Error loading data. Please try again later.', 'danger');
+            }
+        }
+        
+        // Load all artists
+        async function loadArtists() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/artists`);
+                const artists = await response.json();
+                
+                const container = document.getElementById('allArtistsContainer');
+                if (container) {
+                    container.innerHTML = artists.map(artist => `
+                        <div class="col-md-3 col-6 mb-4">
+                            <div class="card h-100">
+                                <img src="https://via.placeholder.com/300" class="card-img-top" alt="${artist.name}">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">${artist.name}</h5>
+                                    ${artist.country ? `<p class="card-text">${artist.country}</p>` : ''}
+                                    <button class="btn btn-outline-primary btn-sm" onclick="viewArtist(${artist.artist_id})">View Artist</button>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Error loading artists:', error);
+                showAlert('Error loading artists. Please try again later.', 'danger');
+            }
+        }
+        
+        // Load all albums
+        async function loadAlbums() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/albums`);
+                const albums = await response.json();
+                
+                const container = document.getElementById('allAlbumsContainer');
+                if (container) {
+                    container.innerHTML = albums.map(album => `
+                        <div class="col-md-3 col-6 mb-4">
+                            <div class="card h-100">
+                                <img src="${album.cover_image_url || 'https://via.placeholder.com/300'}" class="card-img-top album-cover" alt="${album.title}">
+                                <div class="card-body">
+                                    <h5 class="card-title">${album.title}</h5>
+                                    <p class="card-text text-muted">${album.artist_name} • ${album.release_year}</p>
+                                    <button class="btn btn-outline-primary btn-sm" onclick="viewAlbum(${album.album_id})">View Album</button>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Error loading albums:', error);
+                showAlert('Error loading albums. Please try again later.', 'danger');
+            }
+        }
+        
+        // Load playlists
+        async function loadPlaylists() {
+            // This would be implemented to load the user's playlists
+            const container = document.getElementById('playlistsContainer');
+            if (container) {
+                container.innerHTML = `
+                    <div class="col-12 text-center">
+                        <p class="text-muted">You don't have any playlists yet. Create one to get started!</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Handle login
+        async function handleLogin(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Save token and user data
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('currentUser', JSON.stringify({
+                        id: data.id,
+                        username: data.username,
+                        isAdmin: data.isAdmin
+                    }));
+                    
+                    // Update UI
+                    currentUser = { username: data.username };
+                    checkAuthState();
+                    
+                    // Close modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('loginModal'));
+                    modal.hide();
+                    
+                    // Show success message
+                    showAlert('Login successful!', 'success');
+                } else {
+                    throw new Error(data.error || 'Login failed');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showAlert('Invalid email or password', 'danger');
+            }
+        }
+        
+        // Handle registration
+        async function handleRegister(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('registerUsername').value;
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (password !== confirmPassword) {
+                showAlert('Passwords do not match', 'danger');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, email, password })
+                });
+                
+                if (response.ok) {
+                    // Close modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('registerModal'));
+                    modal.hide();
+                    
+                    // Show success message
+                    showAlert('Registration successful! You can now log in.', 'success');
+                } else {
+                    const data = await response.json();
+                    throw new Error(data.error || 'Registration failed');
+                }
+            } catch (error) {
+                console.error('Registration error:', error);
+                showAlert(error.message || 'Error creating account. Please try again.', 'danger');
+            }
+        }
+        
+        // Handle logout
+        function handleLogout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('currentUser');
+            currentUser = null;
+            checkAuthState();
+            showSection('home');
+            showAlert('You have been logged out', 'info');
+        }
+        
+        // Handle search
+        async function handleSearch() {
+            const query = document.getElementById('searchInput').value.trim();
+            
+            if (!query) {
+                showAlert('Please enter a search term', 'warning');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/search?q=${encodeURIComponent(query)}`);
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Search failed');
+                }
+                
+                // Show search results section
+                showSection('search');
+                document.getElementById('searchQuery').textContent = query;
+                
+                // Display artist results
+                const artistsContainer = document.getElementById('searchArtistsContainer');
+                if (artistsContainer) {
+                    if (data.artists && data.artists.length > 0) {
+                        artistsContainer.innerHTML = data.artists.map(artist => `
+                            <div class="col-md-3 col-6 mb-4">
+                                <div class="card h-100">
+                                    <img src="https://via.placeholder.com/300" class="card-img-top" alt="${artist.name}">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">${artist.name}</h5>
+                                        <button class="btn btn-outline-primary btn-sm" onclick="viewArtist(${artist.artist_id})">View Artist</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('');
+                    } else {
+                        artistsContainer.innerHTML = `
+                            <div class="col-12">
+                                <p class="text-muted">No artists found</p>
+                            </div>
+                        `;
+                    }
+                }
+                
+                // Display album results
+                const albumsContainer = document.getElementById('searchAlbumsContainer');
+                if (albumsContainer) {
+                    if (data.albums && data.albums.length > 0) {
+                        albumsContainer.innerHTML = data.albums.map(album => `
+                            <div class="col-md-3 col-6 mb-4">
+                                <div class="card h-100">
+                                    <img src="${album.cover_image_url || 'https://via.placeholder.com/300'}" class="card-img-top album-cover" alt="${album.title}">
+                                    <div class="card-body">
+                                        <h5 class="card-title">${album.title}</h5>
+                                        <p class="card-text text-muted">${album.artist_name} • ${album.release_year}</p>
+                                        <button class="btn btn-outline-primary btn-sm" onclick="viewAlbum(${album.album_id})">View Album</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('');
+                    } else {
+                        albumsContainer.innerHTML = `
+                            <div class="col-12">
+                                <p class="text-muted">No albums found</p>
+                            </div>
+                        `;
+                    }
+                }
+                
+                // Display song results
+                const songsContainer = document.getElementById('searchSongsContainer');
+                if (songsContainer) {
+                    if (data.songs && data.songs.length > 0) {
+                        songsContainer.innerHTML = data.songs.map(song => `
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-0">${song.title}</h6>
+                                    <small class="text-muted">${song.artist_name} • ${song.album_title}</small>
+                                </div>
+                                <div>
+                                    <span class="badge bg-secondary me-2">${formatDuration(song.duration_seconds)}</span>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="playSong(${song.song_id}, '${song.title}', '${song.artist_name}', '${song.cover_image_url || ''}')">
+                                        <i class="bi bi-play-fill"></i> Play
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('');
+                    } else {
+                        songsContainer.innerHTML = `
+                            <div class="list-group-item">
+                                <p class="text-muted mb-0">No songs found</p>
+                            </div>
+                        `;
+                    }
+                }
+                
+            } catch (error) {
+                console.error('Search error:', error);
+                showAlert('Error performing search. Please try again.', 'danger');
+            }
+        }
+        
+        // Handle add artist
+        async function handleAddArtist(e) {
+            e.preventDefault();
+            
+            if (!currentUser) {
+                showAlert('Please log in to add an artist', 'warning');
+                return;
+            }
+            
+            const name = document.getElementById('artistName').value;
+            const country = document.getElementById('artistCountry').value;
+            const formedYear = document.getElementById('artistYear').value;
+            const biography = document.getElementById('artistBio').value;
+            
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_BASE_URL}/artists`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        name,
+                        country: country || null,
+                        formed_year: formedYear ? parseInt(formedYear) : null,
+                        biography: biography || null
+                    })
+                });
+                
+                if (response.ok) {
+                    // Close modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('addArtistModal'));
+                    modal.hide();
+                    
+                    // Reset form
+                    e.target.reset();
+                    
+                    // Reload artists
+                    loadArtists();
+                    
+                    // Show success message
+                    showAlert('Artist added successfully!', 'success');
+                } else {
+                    const data = await response.json();
+                    throw new Error(data.error || 'Failed to add artist');
+                }
+            } catch (error) {
+                console.error('Error adding artist:', error);
+                showAlert(error.message || 'Error adding artist. Please try again.', 'danger');
+            }
+        }
+        
+        // Handle add album
+        async function handleAddAlbum(e) {
+            e.preventDefault();
+            
+            if (!currentUser) {
+                showAlert('Please log in to add an album', 'warning');
+                return;
+            }
+            
+            const title = document.getElementById('albumTitle').value;
+            const artistId = document.getElementById('albumArtist').value;
+            const releaseYear = document.getElementById('albumYear').value;
+            const genre = document.getElementById('albumGenre').value;
+            const coverImageUrl = document.getElementById('albumCover').value;
+            
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_BASE_URL}/albums`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        title,
+                        artist_id: parseInt(artistId),
+                        release_year: releaseYear ? parseInt(releaseYear) : null,
+                        genre: genre || null,
+                        cover_image_url: coverImageUrl || null
+                    })
+                });
+                
+                if (response.ok) {
+                    // Close modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('addAlbumModal'));
+                    modal.hide();
+                    
+                    // Reset form
+                    e.target.reset();
+                    
+                    // Reload albums
+                    loadAlbums();
+                    
+                    // Show success message
+                    showAlert('Album added successfully!', 'success');
+                } else {
+                    const data = await response.json();
+                    throw new Error(data.error || 'Failed to add album');
+                }
+            } catch (error) {
+                console.error('Error adding album:', error);
+                showAlert(error.message || 'Error adding album. Please try again.', 'danger');
+            }
+        }
+        
+        // Setup audio player
+        function setupAudioPlayer() {
+            const audioElement = document.getElementById('audioElement');
+            const playPauseBtn = document.getElementById('playPauseBtn');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const progressBar = document.querySelector('.progress-bar');
+            const currentTimeEl = document.getElementById('currentTime');
+            const durationEl = document.getElementById('duration');
+            const volumeControl = document.getElementById('volumeControl');
+            
+            // Play/Pause toggle
+            playPauseBtn?.addEventListener('click', () => {
+                if (audioElement.paused) {
+                    audioElement.play();
+                    playPauseBtn.innerHTML = '<i class="bi bi-pause-fill"></i>';
+                } else {
+                    audioElement.pause();
+                    playPauseBtn.innerHTML = '<i class="bi bi-play-fill"></i>';
+                }
+            });
+            
+            // Update progress bar
+            audioElement?.addEventListener('timeupdate', () => {
+                const { currentTime, duration } = audioElement;
+                const progressPercent = (currentTime / duration) * 100;
+                progressBar.style.width = `${progressPercent}%`;
+                
+                // Update time display
+                currentTimeEl.textContent = formatTime(currentTime);
+                
+                if (!isNaN(duration)) {
+                    durationEl.textContent = formatTime(duration);
+                }
+            });
+            
+            // Click on progress bar to seek
+            document.querySelector('.progress')?.addEventListener('click', (e) => {
+                const progressBar = e.currentTarget;
+                const clickPosition = e.offsetX;
+                const progressBarWidth = progressBar.offsetWidth;
+                const seekTime = (clickPosition / progressBarWidth) * audioElement.duration;
+                audioElement.currentTime = seekTime;
+            });
+            
+            // Volume control
+            volumeControl?.addEventListener('input', (e) => {
+                audioElement.volume = e.target.value;
+            });
+            
+            // Song ended
+            audioElement?.addEventListener('ended', () => {
+                // Auto-play next song in queue if available
+                // This would be implemented with a proper queue system
+                playPauseBtn.innerHTML = '<i class="bi bi-play-fill"></i>';
+            });
+        }
+        
+        // Format time in MM:SS
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = Math.floor(seconds % 60);
+            return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+        }
+        
+        // Format duration from seconds to MM:SS
+        function formatDuration(seconds) {
+            if (!seconds) return '0:00';
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+        
+        // Show alert message
+        function showAlert(message, type = 'info') {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed top-0 end-0 m-3`;
+            alertDiv.role = 'alert';
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            
+            document.body.appendChild(alertDiv);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                const bsAlert = new bootstrap.Alert(alertDiv);
+                bsAlert.close();
+            }, 5000);
+        }
+        
+        // Global functions for template literals
+        window.viewArtist = (artistId) => {
+            // This would navigate to the artist detail page
+            console.log('View artist:', artistId);
+            // In a real app, this would load the artist details
+            showAlert(`Viewing artist with ID: ${artistId}`, 'info');
+        };
+        
+        window.viewAlbum = (albumId) => {
+            // This would navigate to the album detail page
+            console.log('View album:', albumId);
+            // In a real app, this would load the album details
+            showAlert(`Viewing album with ID: ${albumId}`, 'info');
+        };
+        
+        window.playSong = (songId, title, artist, coverUrl) => {
+            // This would play the selected song
+            console.log('Play song:', songId, title, artist);
+            
+            // Update player UI
+            document.getElementById('nowPlayingTitle').textContent = title;
+            document.getElementById('nowPlayingArtist').textContent = artist;
+            document.getElementById('nowPlayingArt').src = coverUrl || 'https://via.placeholder.com/50';
+            
+            // Show the player if hidden
+            document.getElementById('audioPlayer').classList.remove('d-none');
+            
+            // In a real app, this would set the audio source and play
+            // For demo purposes, we'll just show a message
+            showAlert(`Now playing: ${title} by ${artist}`, 'info');
+            
+            // Simulate play state
+            const playPauseBtn = document.getElementById('playPauseBtn');
+            playPauseBtn.innerHTML = '<i class="bi bi-pause-fill"></i>';
+        };
+        
+        // Load artists for album form
+        async function loadArtistsForAlbumForm() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/artists`);
+                const artists = await response.json();
+                
+                const select = document.getElementById('albumArtist');
+                if (select) {
+                    // Clear existing options except the first one
+                    while (select.options.length > 1) {
+                        select.remove(1);
+                    }
+                    
+                    // Add artists to the select
+                    artists.forEach(artist => {
+                        const option = document.createElement('option');
+                        option.value = artist.artist_id;
+                        option.textContent = artist.name;
+                        select.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading artists for form:', error);
+            }
+        }
+        
+        // Load artists when album modal is shown
+        document.getElementById('addAlbumModal')?.addEventListener('show.bs.modal', loadArtistsForAlbumForm);
+        
+        // Initialize tooltips
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    </script>
+</body>
+</html>

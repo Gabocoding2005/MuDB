@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Database - Analytics</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        body { padding-top: 70px; background-color: #f8f9fa; }
+        .analytics-card { background: white; border-radius: 10px; padding: 20px; margin-bottom: 30px; box-shadow: 0 2px 8px rgba(0,0,0,.1); }
+        .chart-container { position: relative; height: 400px; margin-top: 20px; }
+        .stat-box { text-align: center; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 10px; margin-bottom: 20px; }
+        .stat-box h3 { font-size: 2.5rem; margin: 0; }
+        #map { height: 500px; width: 100%; border-radius: 10px; }
+        .network-table-container { max-height: 600px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="index.html">
+                <i class="bi bi-music-note-beamed me-2"></i>Music Database
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html#artists">Artists</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html#albums">Albums</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html#playlists">Playlists</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="analytics.html">
+                            <i class="bi bi-graph-up"></i> Analytics
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row mb-4">
+            <div class="col-12"><h2 class="mb-4"><i class="bi bi-graph-up"></i> Dashboard de Análisis Musical</h2></div>
+        </div>
+
+        <div class="row" id="statsRow">
+            <div class="col-md-3"><div class="stat-box"><h3 id="totalArtists">-</h3><p>Artistas</p></div></div>
+            <div class="col-md-3"><div class="stat-box" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);"><h3 id="totalAlbums">-</h3><p>Álbumes</p></div></div>
+            <div class="col-md-3"><div class="stat-box" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);"><h3 id="totalSongs">-</h3><p>Canciones</p></div></div>
+            <div class="col-md-3"><div class="stat-box" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);"><h3 id="totalLikes">-</h3><p>Me Gusta</p></div></div>
+        </div>
+
+        <!-- Géneros -->
+        <div class="analytics-card">
+            <h4><i class="bi bi-bar-chart"></i> Popularidad de Géneros</h4>
+            <div class="chart-container"><canvas id="genreChart"></canvas></div>
+        </div>
+
+        <!-- Mapa de Artistas por País -->
+        <div class="analytics-card">
+            <h4><i class="bi bi-globe"></i> Artistas por País</h4>
+            <p class="text-muted">El tamaño de los círculos representa la cantidad de artistas por país</p>
+            <div id="map"></div>
+        </div>
+
+        <!-- Red de Colaboración -->
+        <div class="analytics-card">
+            <h4><i class="bi bi-diagram-3"></i> Red de Colaboración</h4>
+            <div class="network-table-container">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Artista 1</th>
+                            <th>Artista 2</th>
+                            <th>Géneros Compartidos</th>
+                        </tr>
+                    </thead>
+                    <tbody id="networkBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Predicción de Éxito -->
+        <div class="analytics-card">
+            <h4><i class="bi bi-trophy"></i> Predicción de Éxito</h4>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Buscar canción específica:</label>
+                    <input type="text" id="songSearch" class="form-control" placeholder="Escribe el nombre de una canción...">
+                    <div id="searchResults" class="list-group mt-2" style="max-height: 200px; overflow-y: auto;"></div>
+                </div>
+                <div class="col-md-6">
+                    <div id="songPredictionResult" class="alert alert-info" style="display: none;">
+                        <h5 id="predictionSongTitle"></h5>
+                        <p><strong>Artista:</strong> <span id="predictionArtist"></span></p>
+                        <p><strong>Score de Éxito:</strong> <span id="predictionScore" class="badge bg-success"></span></p>
+                        <p><strong>Likes:</strong> <span id="predictionLikes"></span> | <strong>En Playlists:</strong> <span id="predictionPlaylists"></span></p>
+                    </div>
+                </div>
+            </div>
+            <div class="chart-container"><canvas id="successChart"></canvas></div>
+        </div>
+
+        <!-- Canciones con Menor Éxito -->
+        <div class="analytics-card">
+            <h4><i class="bi bi-arrow-down-circle"></i> Canciones con Menor Probabilidad de Éxito</h4>
+            <p class="text-muted">Canciones que necesitan más promoción o engagement</p>
+            <div class="chart-container"><canvas id="lowSuccessChart"></canvas></div>
+        </div>
+
+        <!-- Timeline de Lanzamientos -->
+        <div class="analytics-card">
+            <h4><i class="bi bi-calendar-event"></i> Timeline de Lanzamientos por Década</h4>
+            <p class="text-muted">Evolución histórica de la música en la base de datos</p>
+            <div class="chart-container"><canvas id="timelineChart"></canvas></div>
+        </div>
+
+        <!-- Top Canciones Más Likeadas -->
+        <div class="analytics-card">
+            <h4><i class="bi bi-heart-fill"></i> Top 10 Canciones Más Likeadas</h4>
+            <div class="mb-3">
+                <label class="form-label">Cantidad a mostrar:</label>
+                <select id="topLikedLimit" class="form-select" style="width: 200px;">
+                    <option value="10">Top 10</option>
+                    <option value="20">Top 20</option>
+                    <option value="30">Top 30</option>
+                </select>
+            </div>
+            <div class="chart-container"><canvas id="topLikedChart"></canvas></div>
+        </div>
+
+        <!-- Álbumes Mejor Calificados -->
+        <div class="analytics-card">
+            <h4><i class="bi bi-star-fill"></i> Álbumes Mejor Calificados</h4>
+            <div class="mb-3">
+                <label class="form-label">Cantidad a mostrar:</label>
+                <select id="topRatedLimit" class="form-select" style="width: 200px;">
+                    <option value="10">Top 10</option>
+                    <option value="15" selected>Top 15</option>
+                    <option value="20">Top 20</option>
+                </select>
+            </div>
+            <div class="chart-container"><canvas id="topRatedChart"></canvas></div>
+        </div>
+
+        <!-- Matriz de Correlación de Géneros -->
+        <div class="analytics-card">
+            <h4><i class="bi bi-diagram-2"></i> Matriz de Correlación de Géneros</h4>
+            <p class="text-muted">Qué géneros aparecen juntos con más frecuencia</p>
+            <div class="chart-container"><canvas id="correlationChart"></canvas></div>
+        </div>
+
+        <!-- Evolución de Géneros por Década -->
+        <div class="analytics-card">
+            <h4><i class="bi bi-graph-up-arrow"></i> Evolución de Géneros por Década</h4>
+            <div class="mb-3">
+                <label class="form-label">Filtrar por género:</label>
+                <select id="genreFilter" class="form-select" style="width: 250px;">
+                    <option value="">Todos los géneros</option>
+                </select>
+            </div>
+            <div class="chart-container"><canvas id="evolutionChart"></canvas></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="analytics.js"></script>
+</body>
+</html>

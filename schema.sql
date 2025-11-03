@@ -50,14 +50,16 @@ CREATE TABLE IF NOT EXISTS albums (
 CREATE TABLE IF NOT EXISTS songs (
     song_id INT AUTO_INCREMENT PRIMARY KEY,
     title VARCHAR(200) NOT NULL,
-    duration_seconds INT,
+    duration INT,  -- Duración en segundos
     track_number INT,
     album_id INT NOT NULL,
+    artist_id INT NOT NULL,  -- Agregado para facilitar consultas
     lyrics TEXT,
     audio_file_url VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     created_by INT,
     FOREIGN KEY (album_id) REFERENCES albums(album_id) ON DELETE CASCADE,
+    FOREIGN KEY (artist_id) REFERENCES artists(artist_id) ON DELETE CASCADE,
     FOREIGN KEY (created_by) REFERENCES users(user_id) ON DELETE SET NULL
 );
 
@@ -97,6 +99,15 @@ CREATE TABLE IF NOT EXISTS album_genres (
     FOREIGN KEY (genre_id) REFERENCES genres(genre_id) ON DELETE CASCADE
 );
 
+-- Tabla Intermedia: Canción_Géneros (Song_Genres)
+CREATE TABLE IF NOT EXISTS song_genres (
+    song_id INT NOT NULL,
+    genre_id INT NOT NULL,
+    PRIMARY KEY (song_id, genre_id),
+    FOREIGN KEY (song_id) REFERENCES songs(song_id) ON DELETE CASCADE,
+    FOREIGN KEY (genre_id) REFERENCES genres(genre_id) ON DELETE CASCADE
+);
+
 -- Tabla Intermedia: Álbum_Etiquetas (Album_Tags)
 CREATE TABLE IF NOT EXISTS album_tags (
     album_id INT NOT NULL,
@@ -113,7 +124,7 @@ CREATE TABLE IF NOT EXISTS album_tags (
 CREATE TABLE IF NOT EXISTS playlists (
     playlist_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
-    title VARCHAR(100) NOT NULL,
+    name VARCHAR(100) NOT NULL,  -- Cambiado de 'title' a 'name'
     description TEXT,
     is_public BOOLEAN DEFAULT TRUE,
     cover_image VARCHAR(255),
@@ -128,12 +139,22 @@ CREATE TABLE IF NOT EXISTS playlist_songs (
     song_id INT NOT NULL,
     position INT NOT NULL,
     added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    added_by INT NOT NULL,
+    added_by INT,  -- Cambiado a opcional
     notes TEXT,
-    PRIMARY KEY (playlist_id, song_id, position),
+    PRIMARY KEY (playlist_id, song_id),
     FOREIGN KEY (playlist_id) REFERENCES playlists(playlist_id) ON DELETE CASCADE,
     FOREIGN KEY (song_id) REFERENCES songs(song_id) ON DELETE CASCADE,
     FOREIGN KEY (added_by) REFERENCES users(user_id) ON DELETE CASCADE
+);
+
+-- Tabla de Me Gusta de Usuarios (User_Likes)
+CREATE TABLE IF NOT EXISTS user_likes (
+    user_id INT NOT NULL,
+    song_id INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, song_id),
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (song_id) REFERENCES songs(song_id) ON DELETE CASCADE
 );
 
 -- Tabla de Seguimiento de Usuarios (User_Follows)
@@ -179,11 +200,4 @@ CREATE INDEX idx_playlists_user ON playlists(user_id);
 CREATE INDEX idx_activity_feed_user ON activity_feed(user_id);
 CREATE INDEX idx_activity_feed_created ON activity_feed(created_at);
 
--- Add songs to playlist
--- This is just sample data - in a real application, you'd add actual data here
--- Note: We need to specify position for each song in the playlist
-INSERT INTO playlist_songs (playlist_id, song_id, position, added_by)
-VALUES 
-    (1, 1, 1, 1), 
-    (1, 2, 2, 1), 
-    (1, 3, 3, 1);
+-- Schema completo - Los datos de ejemplo están en seed.sql

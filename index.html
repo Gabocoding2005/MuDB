@@ -95,6 +95,44 @@
         .progress-bar {
             background-color: #0d6efd;
         }
+        .carousel-item {
+            height: 400px;
+        }
+        .carousel-item img {
+            height: 100%;
+            object-fit: cover;
+        }
+        .carousel-caption {
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 10px;
+            padding: 20px;
+        }
+        .trending-song-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            transition: background 0.2s;
+        }
+        .trending-song-item:hover {
+            background: #f8f9fa;
+        }
+        .trending-rank {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #0d6efd;
+            margin-right: 15px;
+            min-width: 30px;
+        }
+        .genre-badge {
+            display: inline-block;
+            padding: 8px 15px;
+            margin: 5px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 500;
+        }
     </style>
 </head>
 <body>
@@ -120,6 +158,11 @@
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="#" data-section="playlists">Playlists</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="analytics.html">
+                            <i class="bi bi-graph-up"></i> Analytics
+                        </a>
                     </li>
                 </ul>
                 <div class="d-flex">
@@ -171,6 +214,60 @@
             <!-- Statistics -->
             <div class="row mb-5" id="statsContainer">
                 <!-- Stats will be loaded here -->
+            </div>
+
+            <!-- Featured Albums Carousel -->
+            <div class="row mb-5">
+                <div class="col-12">
+                    <h2 class="mb-4">🔥 Featured Albums</h2>
+                    <div id="featuredCarousel" class="carousel slide" data-bs-ride="carousel">
+                        <div class="carousel-indicators" id="carouselIndicators">
+                            <!-- Indicators will be loaded here -->
+                        </div>
+                        <div class="carousel-inner" id="carouselInner">
+                            <!-- Carousel items will be loaded here -->
+                        </div>
+                        <button class="carousel-control-prev" type="button" data-bs-target="#featuredCarousel" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Previous</span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#featuredCarousel" data-bs-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Next</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trending Now Section -->
+            <div class="row mb-5">
+                <div class="col-12">
+                    <h2 class="mb-4">📈 Trending Now</h2>
+                </div>
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0"><i class="bi bi-fire"></i> Hot Songs This Week</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="list-group list-group-flush" id="trendingSongsContainer">
+                                <!-- Trending songs will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0"><i class="bi bi-star-fill"></i> Top Genres</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="topGenresContainer">
+                                <!-- Top genres will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Popular Artists -->
@@ -365,25 +462,25 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="registerForm">
+                    <form id="registerForm" onsubmit="handleRegister(event)">
                         <div class="mb-3">
                             <label for="registerUsername" class="form-label">Username</label>
-                            <input type="text" class="form-control" id="registerUsername" required>
+                            <input type="text" class="form-control" id="registerUsername" name="username" required>
                         </div>
                         <div class="mb-3">
                             <label for="registerEmail" class="form-label">Email address</label>
-                            <input type="email" class="form-control" id="registerEmail" required>
+                            <input type="email" class="form-control" id="registerEmail" name="email" required>
                         </div>
                         <div class="mb-3">
                             <label for="registerPassword" class="form-label">Password</label>
-                            <input type="password" class="form-control" id="registerPassword" required>
+                            <input type="password" class="form-control" id="registerPassword" name="password" required>
                         </div>
                         <div class="mb-3">
                             <label for="confirmPassword" class="form-label">Confirm Password</label>
-                            <input type="password" class="form-control" id="confirmPassword" required>
+                            <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
                         </div>
                         <div class="d-grid">
-                            <button type="submit" class="btn btn-primary">Register</button>
+                            <button type="submit" class="btn btn-primary" id="registerBtn">Register</button>
                         </div>
                     </form>
                 </div>
@@ -474,7 +571,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // API Configuration
-        const API_BASE_URL = 'http://localhost:3001/api';
+        const API_BASE_URL = 'http://localhost:3000/api';
         
         // DOM Elements
         const sections = {
@@ -549,6 +646,9 @@
             // Add album form
             document.getElementById('addAlbumForm')?.addEventListener('submit', handleAddAlbum);
             
+            // Create playlist button
+            document.getElementById('createPlaylistBtn')?.addEventListener('click', showCreatePlaylistModal);
+            
             // Audio player controls
             setupAudioPlayer();
         }
@@ -601,42 +701,44 @@
                 const statsResponse = await fetch(`${API_BASE_URL}/statistics`);
                 const statsData = await statsResponse.json();
                 
-                // Display statistics
+                console.log('Stats data:', statsData); // Debug
+                
+                // Display statistics with default values
                 const statsContainer = document.getElementById('statsContainer');
                 if (statsContainer) {
                     statsContainer.innerHTML = `
                         <div class="col-md-2 col-6">
                             <div class="stats-card bg-primary">
                                 <i class="bi bi-people"></i>
-                                <h3>${statsData.totalArtists}</h3>
+                                <h3>${statsData.totalArtists || 0}</h3>
                                 <p>Artists</p>
                             </div>
                         </div>
                         <div class="col-md-2 col-6">
                             <div class="stats-card bg-success">
                                 <i class="bi bi-disc"></i>
-                                <h3>${statsData.totalAlbums}</h3>
+                                <h3>${statsData.totalAlbums || 0}</h3>
                                 <p>Albums</p>
                             </div>
                         </div>
                         <div class="col-md-2 col-6">
                             <div class="stats-card bg-info">
                                 <i class="bi bi-music-note-list"></i>
-                                <h3>${statsData.totalSongs}</h3>
+                                <h3>${statsData.totalSongs || 0}</h3>
                                 <p>Songs</p>
                             </div>
                         </div>
                         <div class="col-md-2 col-6">
                             <div class="stats-card bg-warning">
                                 <i class="bi bi-person"></i>
-                                <h3>${statsData.totalUsers}</h3>
+                                <h3>${statsData.totalUsers || 0}</h3>
                                 <p>Users</p>
                             </div>
                         </div>
                         <div class="col-md-2 col-6">
                             <div class="stats-card bg-danger">
                                 <i class="bi bi-collection-play"></i>
-                                <h3>${statsData.totalPlaylists}</h3>
+                                <h3>${statsData.totalPlaylists || 0}</h3>
                                 <p>Playlists</p>
                             </div>
                         </div>
@@ -645,41 +747,148 @@
                 
                 // Display popular artists
                 const artistsContainer = document.getElementById('artistsContainer');
-                if (artistsContainer) {
-                    artistsContainer.innerHTML = statsData.popularArtists.map(artist => `
+                if (artistsContainer && statsData.popularArtists && statsData.popularArtists.length > 0) {
+                    artistsContainer.innerHTML = statsData.popularArtists.slice(0, 4).map(artist => `
                         <div class="col-md-3 col-6 mb-4">
-                            <div class="card h-100">
-                                <img src="https://via.placeholder.com/300" class="card-img-top" alt="${artist.name}">
-                                <div class="card-body text-center">
+                            <div class="card h-100 text-center">
+                                <div class="card-body">
+                                    <img src="${artist.profile_image || 'https://via.placeholder.com/120'}" class="artist-avatar mb-3" alt="${artist.name}">
                                     <h5 class="card-title">${artist.name}</h5>
-                                    <p class="card-text text-muted">${artist.song_count} songs</p>
-                                    <button class="btn btn-outline-primary btn-sm" onclick="viewArtist(${artist.artist_id})">View Artist</button>
+                                    <p class="card-text text-muted">${artist.song_count || 0} songs</p>
+                                    <button class="btn btn-outline-primary btn-sm" onclick="viewArtist(${artist.artist_id})">
+                                        <i class="bi bi-eye"></i> View Profile
+                                    </button>
                                 </div>
                             </div>
                         </div>
                     `).join('');
+                } else if (artistsContainer) {
+                    artistsContainer.innerHTML = '<div class="col-12"><p class="text-muted text-center">No artists found</p></div>';
                 }
                 
                 // Display recent albums
                 const albumsContainer = document.getElementById('albumsContainer');
-                if (albumsContainer) {
-                    albumsContainer.innerHTML = statsData.recentAlbums.map(album => `
+                if (albumsContainer && statsData.recentAlbums && statsData.recentAlbums.length > 0) {
+                    albumsContainer.innerHTML = statsData.recentAlbums.slice(0, 4).map(album => `
                         <div class="col-md-3 col-6 mb-4">
                             <div class="card h-100">
-                                <img src="${album.cover_image_url || 'https://via.placeholder.com/300'}" class="card-img-top album-cover" alt="${album.title}">
+                                <img src="${album.cover_image || 'https://via.placeholder.com/300'}" class="card-img-top album-cover" alt="${album.title}">
                                 <div class="card-body">
                                     <h5 class="card-title">${album.title}</h5>
-                                    <p class="card-text text-muted">${album.artist_name} • ${album.release_year}</p>
-                                    <button class="btn btn-outline-primary btn-sm" onclick="viewAlbum(${album.album_id})">View Album</button>
+                                    <p class="card-text text-muted">${album.artist_name || 'Unknown'}</p>
+                                    <button class="btn btn-outline-primary btn-sm" onclick="viewAlbum(${album.album_id})">
+                                        <i class="bi bi-eye"></i> View Album
+                                    </button>
                                 </div>
+                            </div>
+                        </div>
+                    `).join('');
+                } else if (albumsContainer) {
+                    albumsContainer.innerHTML = '<div class="col-12"><p class="text-muted text-center">No albums found</p></div>';
+                }
+                
+                // Load featured carousel
+                await loadFeaturedCarousel();
+                
+                // Load trending section
+                await loadTrendingSection();
+                
+            } catch (error) {
+                console.error('Error loading home data:', error);
+                showAlert('Error loading data. Please try again later.', 'danger');
+            }
+        }
+        
+        // Load featured albums carousel
+        async function loadFeaturedCarousel() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/albums`);
+                const albums = await response.json();
+                
+                const featuredAlbums = albums.slice(0, 5); // Top 5 albums
+                
+                const carouselInner = document.getElementById('carouselInner');
+                const carouselIndicators = document.getElementById('carouselIndicators');
+                
+                if (carouselInner && featuredAlbums.length > 0) {
+                    carouselInner.innerHTML = featuredAlbums.map((album, index) => `
+                        <div class="carousel-item ${index === 0 ? 'active' : ''}">
+                            <img src="${album.cover_image || 'https://via.placeholder.com/1200x400'}" class="d-block w-100" alt="${album.title}">
+                            <div class="carousel-caption d-none d-md-block">
+                                <h3>${album.title}</h3>
+                                <p>${album.artist_name || 'Unknown Artist'}</p>
+                                <button class="btn btn-primary" onclick="viewAlbum(${album.album_id})">
+                                    <i class="bi bi-play-fill"></i> View Album
+                                </button>
+                            </div>
+                        </div>
+                    `).join('');
+                    
+                    carouselIndicators.innerHTML = featuredAlbums.map((_, index) => `
+                        <button type="button" data-bs-target="#featuredCarousel" data-bs-slide-to="${index}" 
+                                ${index === 0 ? 'class="active" aria-current="true"' : ''} 
+                                aria-label="Slide ${index + 1}"></button>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Error loading carousel:', error);
+            }
+        }
+        
+        // Load trending section
+        async function loadTrendingSection() {
+            try {
+                // Load trending songs (songs with most likes)
+                const songsResponse = await fetch(`${API_BASE_URL}/analytics/music-success-prediction`);
+                const songsData = await songsResponse.json();
+                
+                const trendingSongsContainer = document.getElementById('trendingSongsContainer');
+                if (trendingSongsContainer && songsData.success && songsData.data) {
+                    const topSongs = songsData.data.slice(0, 5);
+                    trendingSongsContainer.innerHTML = topSongs.map((song, index) => `
+                        <div class="trending-song-item">
+                            <span class="trending-rank">#${index + 1}</span>
+                            <div class="flex-grow-1">
+                                <strong>${song.song_title}</strong>
+                                <br>
+                                <small class="text-muted">${song.artist_name}</small>
+                            </div>
+                            <div>
+                                <span class="badge bg-success">${song.total_likes || 0} ❤️</span>
+                                <button class="btn btn-sm btn-primary ms-2" onclick="playSong(${song.song_id}, '${song.song_title.replace(/'/g, "\\'")}', '${song.artist_name.replace(/'/g, "\\'")}', '')">
+                                    <i class="bi bi-play-fill"></i>
+                                </button>
                             </div>
                         </div>
                     `).join('');
                 }
                 
+                // Load top genres
+                const genresResponse = await fetch(`${API_BASE_URL}/analytics/genre-popularity-timeline`);
+                const genresData = await genresResponse.json();
+                
+                const topGenresContainer = document.getElementById('topGenresContainer');
+                if (topGenresContainer && genresData.success && genresData.data) {
+                    // Group by genre and sum song counts
+                    const genreMap = {};
+                    genresData.data.forEach(item => {
+                        if (!genreMap[item.genre_name]) {
+                            genreMap[item.genre_name] = 0;
+                        }
+                        genreMap[item.genre_name] += item.song_count;
+                    });
+                    
+                    // Sort and get top 6
+                    const topGenres = Object.entries(genreMap)
+                        .sort((a, b) => b[1] - a[1])
+                        .slice(0, 6);
+                    
+                    topGenresContainer.innerHTML = topGenres.map(([genre, count]) => `
+                        <span class="genre-badge">${genre} (${count})</span>
+                    `).join('');
+                }
             } catch (error) {
-                console.error('Error loading home data:', error);
-                showAlert('Error loading data. Please try again later.', 'danger');
+                console.error('Error loading trending section:', error);
             }
         }
         
@@ -739,14 +948,141 @@
         
         // Load playlists
         async function loadPlaylists() {
-            // This would be implemented to load the user's playlists
-            const container = document.getElementById('playlistsContainer');
-            if (container) {
-                container.innerHTML = `
-                    <div class="col-12 text-center">
-                        <p class="text-muted">You don't have any playlists yet. Create one to get started!</p>
+            try {
+                const response = await fetch(`${API_BASE_URL}/playlists`);
+                const playlists = await response.json();
+                
+                const container = document.getElementById('playlistsContainer');
+                if (container) {
+                    if (playlists.length > 0) {
+                        container.innerHTML = playlists.map(playlist => `
+                            <div class="col-md-4 mb-4">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h5 class="card-title">${playlist.name}</h5>
+                                        <p class="card-text text-muted">${playlist.description || 'No description'}</p>
+                                        <p class="card-text"><small class="text-muted">By ${playlist.username || 'Unknown'}</small></p>
+                                        <button class="btn btn-outline-primary btn-sm" onclick="viewPlaylist(${playlist.playlist_id})">
+                                            <i class="bi bi-eye"></i> View Playlist
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('');
+                    } else {
+                        container.innerHTML = `
+                            <div class="col-12 text-center">
+                                <p class="text-muted">No playlists found. Create one to get started!</p>
+                            </div>
+                        `;
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading playlists:', error);
+                const container = document.getElementById('playlistsContainer');
+                if (container) {
+                    container.innerHTML = `
+                        <div class="col-12 text-center">
+                            <p class="text-danger">Error loading playlists. Please try again later.</p>
+                        </div>
+                    `;
+                }
+            }
+        }
+        
+        // Show create playlist modal
+        function showCreatePlaylistModal() {
+            if (!currentUser) {
+                showAlert('Please login to create playlists', 'warning');
+                return;
+            }
+            
+            const modalHtml = `
+                <div class="modal fade" id="createPlaylistModal" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Create New Playlist</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <form id="createPlaylistForm">
+                                    <div class="mb-3">
+                                        <label for="playlistName" class="form-label">Playlist Name *</label>
+                                        <input type="text" class="form-control" id="playlistName" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="playlistDescription" class="form-label">Description</label>
+                                        <textarea class="form-control" id="playlistDescription" rows="3"></textarea>
+                                    </div>
+                                    <div class="mb-3 form-check">
+                                        <input type="checkbox" class="form-check-input" id="playlistPublic" checked>
+                                        <label class="form-check-label" for="playlistPublic">Make playlist public</label>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn btn-primary" onclick="handleCreatePlaylist()">Create Playlist</button>
+                            </div>
+                        </div>
                     </div>
-                `;
+                </div>
+            `;
+            
+            // Remove existing modal if any
+            const existingModal = document.getElementById('createPlaylistModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+            
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            const modal = new bootstrap.Modal(document.getElementById('createPlaylistModal'));
+            modal.show();
+            
+            document.getElementById('createPlaylistModal').addEventListener('hidden.bs.modal', function () {
+                this.remove();
+            });
+        }
+        
+        // Handle create playlist
+        async function handleCreatePlaylist() {
+            const name = document.getElementById('playlistName').value.trim();
+            const description = document.getElementById('playlistDescription').value.trim();
+            const isPublic = document.getElementById('playlistPublic').checked;
+            
+            if (!name) {
+                showAlert('Please enter a playlist name', 'warning');
+                return;
+            }
+            
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_BASE_URL}/playlists`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        name, 
+                        description: description || null, 
+                        is_public: isPublic 
+                    })
+                });
+                
+                if (response.ok) {
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('createPlaylistModal'));
+                    modal.hide();
+                    showAlert('Playlist created successfully!', 'success');
+                    loadPlaylists(); // Reload playlists
+                } else {
+                    const data = await response.json();
+                    showAlert(data.error || 'Error creating playlist', 'danger');
+                }
+            } catch (error) {
+                console.error('Error creating playlist:', error);
+                showAlert('Error creating playlist', 'danger');
             }
         }
         
@@ -800,39 +1136,77 @@
         async function handleRegister(e) {
             e.preventDefault();
             
-            const username = document.getElementById('registerUsername').value;
-            const email = document.getElementById('registerEmail').value;
-            const password = document.getElementById('registerPassword').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
-            
-            if (password !== confirmPassword) {
-                showAlert('Passwords do not match', 'danger');
-                return;
-            }
+            const registerBtn = document.getElementById('registerBtn');
+            const originalBtnText = registerBtn.innerHTML;
             
             try {
+                // Mostrar indicador de carga
+                registerBtn.disabled = true;
+                registerBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Creando cuenta...';
+                
+                const username = document.getElementById('registerUsername').value.trim();
+                const email = document.getElementById('registerEmail').value.trim();
+                const password = document.getElementById('registerPassword').value;
+                const confirmPassword = document.getElementById('confirmPassword').value;
+                
+                // Validaciones básicas
+                if (!username || !email || !password || !confirmPassword) {
+                    throw new Error('Por favor completa todos los campos');
+                }
+                
+                if (password !== confirmPassword) {
+                    throw new Error('Las contraseñas no coinciden');
+                }
+                
+                if (password.length < 6) {
+                    throw new Error('La contraseña debe tener al menos 6 caracteres');
+                }
+                
+                console.log('Enviando solicitud de registro a:', `${API_BASE_URL}/register`);
+                
                 const response = await fetch(`${API_BASE_URL}/register`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Accept': 'application/json'
                     },
-                    body: JSON.stringify({ username, email, password })
+                    body: JSON.stringify({ 
+                        username: username,
+                        email: email, 
+                        password: password 
+                    })
                 });
                 
-                if (response.ok) {
-                    // Close modal
-                    const modal = bootstrap.Modal.getInstance(document.getElementById('registerModal'));
-                    modal.hide();
-                    
-                    // Show success message
-                    showAlert('Registration successful! You can now log in.', 'success');
-                } else {
-                    const data = await response.json();
-                    throw new Error(data.error || 'Registration failed');
+                console.log('Respuesta del servidor:', response);
+                
+                const data = await response.json().catch(() => ({}));
+                
+                if (!response.ok) {
+                    // Si hay errores de validación del servidor
+                    if (data.errors && Array.isArray(data.errors)) {
+                        const errorMessages = data.errors.map(err => err.msg || err.message).join('. ');
+                        throw new Error(errorMessages || 'Error en los datos proporcionados');
+                    }
+                    throw new Error(data.message || `Error en el registro (${response.status})`);
                 }
+                
+                // Registro exitoso
+                showAlert('¡Registro exitoso! Ya puedes iniciar sesión.', 'success');
+                
+                // Cerrar el modal de registro
+                const modal = bootstrap.Modal.getInstance(document.getElementById('registerModal'));
+                if (modal) modal.hide();
+                
+                // Limpiar el formulario
+                document.getElementById('registerForm').reset();
+                
             } catch (error) {
-                console.error('Registration error:', error);
-                showAlert(error.message || 'Error creating account. Please try again.', 'danger');
+                console.error('Error en el registro:', error);
+                showAlert(error.message || 'Error al crear la cuenta. Por favor, inténtalo de nuevo.', 'danger');
+            } finally {
+                // Restaurar el botón
+                registerBtn.disabled = false;
+                registerBtn.innerHTML = originalBtnText;
             }
         }
         
@@ -1219,6 +1593,331 @@
         tooltipTriggerList.map(function (tooltipTriggerEl) {
             return new bootstrap.Tooltip(tooltipTriggerEl);
         });
+        
+        // FIX: Mejorar viewArtist y viewAlbum
+        window.viewArtist = async (artistId) => {
+            try {
+                const response = await fetch(`${API_BASE_URL}/artists/${artistId}`);
+                const artist = await response.json();
+                
+                // Ocultar todas las secciones
+                document.querySelectorAll('[id$="Section"]').forEach(section => section.classList.add('d-none'));
+                
+                // Crear y mostrar sección de detalles del artista
+                let artistDetailSection = document.getElementById('artistDetailSection');
+                if (!artistDetailSection) {
+                    artistDetailSection = document.createElement('div');
+                    artistDetailSection.id = 'artistDetailSection';
+                    document.querySelector('.container.my-4').appendChild(artistDetailSection);
+                }
+                
+                artistDetailSection.classList.remove('d-none');
+                artistDetailSection.innerHTML = `
+                    <button class="btn btn-outline-secondary mb-3" onclick="showSection('artists')">
+                        <i class="bi bi-arrow-left"></i> Back to Artists
+                    </button>
+                    <div class="row">
+                        <div class="col-md-4 text-center">
+                            <img src="${artist.profile_image || 'https://via.placeholder.com/300'}" class="img-fluid rounded-circle mb-3" style="max-width: 300px;" alt="${artist.name}">
+                            <h2>${artist.name}</h2>
+                            <p class="text-muted">${artist.country || 'Unknown'} • ${artist.formation_year || 'N/A'}</p>
+                        </div>
+                        <div class="col-md-8">
+                            <h4>Biography</h4>
+                            <p>${artist.bio || 'No biography available.'}</p>
+                            
+                            <h4 class="mt-4">Albums</h4>
+                            <div class="row" id="artistAlbumsDetail">
+                                <div class="col-12 text-center">
+                                    <div class="spinner-border spinner-border-sm"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Cargar álbumes del artista
+                const albumsResponse = await fetch(`${API_BASE_URL}/artists/${artistId}/albums`);
+                const albums = await albumsResponse.json();
+                
+                const albumsContainer = document.getElementById('artistAlbumsDetail');
+                if (albums.length > 0) {
+                    albumsContainer.innerHTML = albums.map(album => `
+                        <div class="col-md-4 mb-3">
+                            <div class="card">
+                                <img src="${album.cover_image || 'https://via.placeholder.com/200'}" class="card-img-top" alt="${album.title}">
+                                <div class="card-body">
+                                    <h6 class="card-title">${album.title}</h6>
+                                    <p class="card-text text-muted">${album.release_date ? new Date(album.release_date).getFullYear() : 'N/A'}</p>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="viewAlbum(${album.album_id})">View Album</button>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    albumsContainer.innerHTML = '<div class="col-12"><p class="text-muted">No albums found.</p></div>';
+                }
+            } catch (error) {
+                console.error('Error loading artist:', error);
+                showAlert('Error loading artist details', 'danger');
+            }
+        };
+        
+        // Like a song
+        window.likeSong = async function(songId) {
+            if (!currentUser) {
+                showAlert('Please login to like songs', 'warning');
+                return;
+            }
+            
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_BASE_URL}/songs/${songId}/like`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    showAlert('Song liked!', 'success');
+                } else {
+                    const data = await response.json();
+                    showAlert(data.error || 'Error liking song', 'danger');
+                }
+            } catch (error) {
+                console.error('Error liking song:', error);
+                showAlert('Error liking song', 'danger');
+            }
+        };
+        
+        // Show modal to add song to playlist
+        window.showAddToPlaylistModal = async function(songId, songTitle) {
+            if (!currentUser) {
+                showAlert('Please login to add songs to playlists', 'warning');
+                return;
+            }
+            
+            try {
+                const token = localStorage.getItem('token');
+                const userData = JSON.parse(localStorage.getItem('currentUser'));
+                const response = await fetch(`${API_BASE_URL}/users/${userData.id}/playlists`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const playlists = await response.json();
+                
+                const modalHtml = `
+                    <div class="modal fade" id="addToPlaylistModal" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Add "${songTitle}" to Playlist</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    ${playlists.length > 0 ? `
+                                        <div class="list-group">
+                                            ${playlists.map(playlist => `
+                                                <button type="button" class="list-group-item list-group-item-action" onclick="addSongToPlaylist(${playlist.playlist_id}, ${songId})">
+                                                    <div class="d-flex justify-content-between">
+                                                        <strong>${playlist.name}</strong>
+                                                        <span class="badge bg-secondary">${playlist.song_count || 0} songs</span>
+                                                    </div>
+                                                    <small class="text-muted">${playlist.description || ''}</small>
+                                                </button>
+                                            `).join('')}
+                                        </div>
+                                    ` : '<p class="text-muted">You don\'t have any playlists yet. Create one first!</p>'}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+                const modal = new bootstrap.Modal(document.getElementById('addToPlaylistModal'));
+                modal.show();
+                
+                document.getElementById('addToPlaylistModal').addEventListener('hidden.bs.modal', function () {
+                    this.remove();
+                });
+            } catch (error) {
+                console.error('Error loading playlists:', error);
+                showAlert('Error loading playlists', 'danger');
+            }
+        };
+        
+        // Add song to playlist
+        window.addSongToPlaylist = async function(playlistId, songId) {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_BASE_URL}/playlists/${playlistId}/songs`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ song_id: songId })
+                });
+                
+                if (response.ok) {
+                    showAlert('Song added to playlist!', 'success');
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('addToPlaylistModal'));
+                    modal.hide();
+                } else {
+                    const data = await response.json();
+                    showAlert(data.error || 'Error adding song to playlist', 'danger');
+                }
+            } catch (error) {
+                console.error('Error adding song to playlist:', error);
+                showAlert('Error adding song to playlist', 'danger');
+            }
+        };
+        
+        // View playlist details
+        window.viewPlaylist = async function(playlistId) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/playlists/${playlistId}`);
+                const playlist = await response.json();
+                
+                // Ocultar todas las secciones
+                document.querySelectorAll('[id$="Section"]').forEach(section => section.classList.add('d-none'));
+                
+                // Crear y mostrar sección de detalles de la playlist
+                let playlistDetailSection = document.getElementById('playlistDetailSection');
+                if (!playlistDetailSection) {
+                    playlistDetailSection = document.createElement('div');
+                    playlistDetailSection.id = 'playlistDetailSection';
+                    document.querySelector('.container.my-4').appendChild(playlistDetailSection);
+                }
+                
+                playlistDetailSection.classList.remove('d-none');
+                playlistDetailSection.innerHTML = `
+                    <button class="btn btn-outline-secondary mb-3" onclick="showSection('playlists')">
+                        <i class="bi bi-arrow-left"></i> Back to Playlists
+                    </button>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <div>
+                                    <h2>${playlist.name}</h2>
+                                    <p class="text-muted">Created by ${playlist.username || 'Unknown'}</p>
+                                    <p>${playlist.description || 'No description available.'}</p>
+                                </div>
+                                <div>
+                                    <span class="badge bg-primary">${playlist.songs ? playlist.songs.length : 0} songs</span>
+                                </div>
+                            </div>
+                            
+                            <h4 class="mt-4">Songs</h4>
+                            <div class="list-group" id="playlistSongsDetail">
+                                ${playlist.songs && playlist.songs.length > 0 ? 
+                                    playlist.songs.map((song, index) => `
+                                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <strong>${index + 1}.</strong> ${song.title}
+                                                <br>
+                                                <small class="text-muted">${song.artist_name || 'Unknown'} - ${song.album_title || 'Unknown Album'}</small>
+                                            </div>
+                                            <div>
+                                                <span class="badge bg-secondary">${formatDuration(song.duration)}</span>
+                                                <button class="btn btn-sm btn-primary ms-2" onclick="playSong(${song.song_id}, '${song.title.replace(/'/g, "\\'")}', '${song.artist_name ? song.artist_name.replace(/'/g, "\\'") : 'Unknown'}', '')">
+                                                    <i class="bi bi-play-fill"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    `).join('')
+                                : '<div class="list-group-item text-muted">No songs in this playlist yet.</div>'}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error loading playlist:', error);
+                showAlert('Error loading playlist details', 'danger');
+            }
+        };
+        
+        window.viewAlbum = async (albumId) => {
+            try {
+                const response = await fetch(`${API_BASE_URL}/albums/${albumId}`);
+                const album = await response.json();
+                
+                // Ocultar todas las secciones
+                document.querySelectorAll('[id$="Section"]').forEach(section => section.classList.add('d-none'));
+                
+                // Crear y mostrar sección de detalles del álbum
+                let albumDetailSection = document.getElementById('albumDetailSection');
+                if (!albumDetailSection) {
+                    albumDetailSection = document.createElement('div');
+                    albumDetailSection.id = 'albumDetailSection';
+                    document.querySelector('.container.my-4').appendChild(albumDetailSection);
+                }
+                
+                albumDetailSection.classList.remove('d-none');
+                albumDetailSection.innerHTML = `
+                    <button class="btn btn-outline-secondary mb-3" onclick="showSection('albums')">
+                        <i class="bi bi-arrow-left"></i> Back to Albums
+                    </button>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <img src="${album.cover_image || 'https://via.placeholder.com/400'}" class="img-fluid rounded mb-3" alt="${album.title}">
+                        </div>
+                        <div class="col-md-8">
+                            <h2>${album.title}</h2>
+                            <p class="text-muted">By ${album.artist_name || 'Unknown'}</p>
+                            <p><strong>Release Date:</strong> ${album.release_date ? new Date(album.release_date).toLocaleDateString() : 'Unknown'}</p>
+                            <p>${album.description || 'No description available.'}</p>
+                            
+                            <h4 class="mt-4">Tracks</h4>
+                            <div class="list-group" id="albumTracksDetail">
+                                <div class="text-center">
+                                    <div class="spinner-border spinner-border-sm"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Cargar canciones del álbum
+                const songsResponse = await fetch(`${API_BASE_URL}/albums/${albumId}/songs`);
+                const songs = await songsResponse.json();
+                
+                const tracksContainer = document.getElementById('albumTracksDetail');
+                if (songs.length > 0) {
+                    tracksContainer.innerHTML = songs.map((song, index) => `
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>${song.track_number || index + 1}.</strong> ${song.title}
+                            </div>
+                            <div>
+                                <span class="badge bg-secondary">${formatDuration(song.duration)}</span>
+                                <button class="btn btn-sm btn-primary ms-2" onclick="playSong(${song.song_id}, '${song.title.replace(/'/g, "\\'")}', '${album.artist_name.replace(/'/g, "\\'")}', '${album.cover_image || ''}')">
+                                    <i class="bi bi-play-fill"></i>
+                                </button>
+                                ${currentUser ? `
+                                    <button class="btn btn-sm btn-outline-danger ms-1" onclick="likeSong(${song.song_id})" title="Like">
+                                        <i class="bi bi-heart"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-success ms-1" onclick="showAddToPlaylistModal(${song.song_id}, '${song.title.replace(/'/g, "\\'")}')">
+                                        <i class="bi bi-plus-circle"></i>
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    tracksContainer.innerHTML = '<div class="list-group-item text-muted">No tracks found.</div>';
+                }
+            } catch (error) {
+                console.error('Error loading album:', error);
+                showAlert('Error loading album details', 'danger');
+            }
+        };
     </script>
 </body>
 </html>

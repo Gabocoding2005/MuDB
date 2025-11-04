@@ -166,250 +166,29 @@ El frontend estará disponible en `http://localhost:8000`
 
 **Nota**: Todas las contraseñas están hasheadas con bcrypt. La contraseña real es "password" (hash: `$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi`)
 
-## 📈 Vistas SQL Disponibles y Cómo Funcionan
+## 📈 Vistas SQL y Analytics
 
-### 🔍 Explicación Técnica de las Vistas
+El sistema incluye **10 vistas SQL** optimizadas para análisis avanzados de datos musicales. Para ver la documentación completa de las queries, visualizaciones y tecnologías utilizadas, consulta el documento **[Dashboard - MuMusic.md](Dashboard%20-%20MuMusic.md)**.
 
-Las vistas SQL son consultas pre-definidas que simplifican el acceso a datos complejos. Aquí está cómo cada vista genera sus datos:
+### Vistas Disponibles
 
-#### 1. **vw_dashboard_summary** - Resumen Estadístico General
-```sql
--- Cuenta totales de artistas, álbumes, canciones, usuarios, playlists y likes
-SELECT 
-    COUNT(DISTINCT artist_id) as total_artists,
-    COUNT(DISTINCT album_id) as total_albums,
-    COUNT(DISTINCT song_id) as total_songs,
-    COUNT(DISTINCT user_id) as total_users,
-    COUNT(DISTINCT playlist_id) as total_playlists,
-    COUNT(DISTINCT like_id) as total_likes
-FROM [tablas correspondientes]
-```
-**Uso**: Dashboard principal con estadísticas en tiempo real
+1. **vw_dashboard_summary** - Resumen estadístico general
+2. **vw_genre_popularity_timeline** - Evolución de géneros en el tiempo
+3. **vw_artist_popularity_by_country** - Distribución geográfica de artistas
+4. **vw_artist_collaboration_network** - Red de colaboración entre artistas
+5. **vw_music_success_prediction** - Predicción de éxito musical
+6. **vw_genre_correlations_by_era** - Correlaciones de géneros por época
+7. **vw_popularity_trends_by_decade** - Tendencias por década
+8. **vw_artist_centrality_analysis** - Análisis de influencia de artistas
+9. **vw_genre_heatmap_by_region_era** - Mapa de calor geográfico-temporal
+10. **vw_album_participation_breakdown** - Análisis de estructura de álbumes
 
-#### 2. **vw_genre_popularity_timeline** - Evolución de Géneros
-```sql
--- Agrupa canciones por género y año de lanzamiento
-SELECT 
-    g.name as genre_name,
-    YEAR(al.release_date) as year,
-    COUNT(DISTINCT s.song_id) as song_count
-FROM songs s
-JOIN albums al ON s.album_id = al.album_id
-JOIN song_genres sg ON s.song_id = sg.song_id
-JOIN genres g ON sg.genre_id = g.genre_id
-GROUP BY g.name, YEAR(al.release_date)
-```
-**Uso**: Gráfico de líneas mostrando popularidad de géneros a través del tiempo
+### Tecnologías de Visualización
 
-#### 3. **vw_artist_popularity_by_country** - Distribución Geográfica
-```sql
--- Cuenta artistas por país con sus canciones totales
-SELECT 
-    ar.country,
-    COUNT(DISTINCT ar.artist_id) as artist_count,
-    COUNT(DISTINCT s.song_id) as total_songs
-FROM artists ar
-LEFT JOIN albums al ON ar.artist_id = al.artist_id
-LEFT JOIN songs s ON al.album_id = s.album_id
-GROUP BY ar.country
-```
-**Uso**: Mapa interactivo con círculos proporcionales al número de artistas
-
-#### 4. **vw_artist_collaboration_network** - Red de Colaboración
-```sql
--- Encuentra artistas que comparten géneros (colaboraciones indirectas)
-SELECT 
-    a1.artist_id as artist1_id,
-    a1.name as artist1_name,
-    a2.artist_id as artist2_id,
-    a2.name as artist2_name,
-    COUNT(DISTINCT sg1.genre_id) as shared_genres
-FROM artists a1
-JOIN albums al1 ON a1.artist_id = al1.artist_id
-JOIN songs s1 ON al1.album_id = s1.album_id
-JOIN song_genres sg1 ON s1.song_id = sg1.song_id
-JOIN song_genres sg2 ON sg1.genre_id = sg2.genre_id
-JOIN songs s2 ON sg2.song_id = s2.song_id
-JOIN albums al2 ON s2.album_id = al2.album_id
-JOIN artists a2 ON al2.artist_id = a2.artist_id
-WHERE a1.artist_id < a2.artist_id
-GROUP BY a1.artist_id, a2.artist_id
-```
-**Uso**: Diagrama de red con D3.js (nodos = géneros, conexiones = canciones compartidas)
-
-#### 5. **vw_music_success_prediction** - Predicción de Éxito
-```sql
--- Calcula un score de éxito basado en likes, playlists y popularidad
-SELECT 
-    s.song_id,
-    s.title as song_title,
-    ar.name as artist_name,
-    COUNT(DISTINCT l.like_id) as like_count,
-    COUNT(DISTINCT ps.playlist_id) as playlist_count,
-    (COUNT(DISTINCT l.like_id) * 2 + COUNT(DISTINCT ps.playlist_id) * 3) as success_score
-FROM songs s
-JOIN albums al ON s.album_id = al.album_id
-JOIN artists ar ON al.artist_id = ar.artist_id
-LEFT JOIN likes l ON s.song_id = l.song_id
-LEFT JOIN playlist_songs ps ON s.song_id = ps.song_id
-GROUP BY s.song_id
-ORDER BY success_score DESC
-```
-**Uso**: Gráfico de barras con predicción de éxito (likes × 2 + playlists × 3)
-
-#### 6. **vw_genre_correlations_by_era** - Correlaciones de Géneros
-```sql
--- Encuentra géneros que aparecen juntos en las mismas canciones
-SELECT 
-    g1.name as genre1_name,
-    g2.name as genre2_name,
-    COUNT(DISTINCT sg1.song_id) as co_occurrence_count
-FROM song_genres sg1
-JOIN song_genres sg2 ON sg1.song_id = sg2.song_id AND sg1.genre_id < sg2.genre_id
-JOIN genres g1 ON sg1.genre_id = g1.genre_id
-JOIN genres g2 ON sg2.genre_id = g2.genre_id
-GROUP BY g1.genre_id, g2.genre_id
-ORDER BY co_occurrence_count DESC
-```
-**Uso**: Matriz de correlación mostrando qué géneros se combinan frecuentemente
-
-#### 7. **vw_popularity_trends_by_decade** - Tendencias por Década
-```sql
--- Agrupa lanzamientos por década
-SELECT 
-    FLOOR(YEAR(al.release_date) / 10) * 10 as decade,
-    COUNT(DISTINCT al.album_id) as album_count,
-    COUNT(DISTINCT s.song_id) as song_count
-FROM albums al
-LEFT JOIN songs s ON al.album_id = s.album_id
-GROUP BY decade
-ORDER BY decade
-```
-**Uso**: Timeline histórico mostrando evolución de la industria musical
-
-#### 8. **vw_artist_centrality_analysis** - Análisis de Influencia
-```sql
--- Calcula la "centralidad" de artistas basada en conexiones
-SELECT 
-    ar.artist_id,
-    ar.name as artist_name,
-    COUNT(DISTINCT al.album_id) as album_count,
-    COUNT(DISTINCT s.song_id) as song_count,
-    COUNT(DISTINCT sg.genre_id) as genre_diversity
-FROM artists ar
-LEFT JOIN albums al ON ar.artist_id = al.artist_id
-LEFT JOIN songs s ON al.album_id = s.album_id
-LEFT JOIN song_genres sg ON s.song_id = sg.song_id
-GROUP BY ar.artist_id
-ORDER BY genre_diversity DESC, song_count DESC
-```
-**Uso**: Identificar artistas más influyentes por diversidad de géneros
-
-#### 9. **vw_genre_heatmap_by_region_era** - Mapa de Calor Geográfico
-```sql
--- Combina país, género y época para análisis geográfico-temporal
-SELECT 
-    ar.country,
-    g.name as genre_name,
-    FLOOR(YEAR(al.release_date) / 10) * 10 as decade,
-    COUNT(DISTINCT s.song_id) as song_count
-FROM artists ar
-JOIN albums al ON ar.artist_id = al.artist_id
-JOIN songs s ON al.album_id = s.album_id
-JOIN song_genres sg ON s.song_id = sg.song_id
-JOIN genres g ON sg.genre_id = g.genre_id
-GROUP BY ar.country, g.genre_id, decade
-```
-**Uso**: Visualización de calor mostrando qué géneros dominan por región y época
-
-#### 10. **vw_album_participation_breakdown** - Análisis de Álbumes
-```sql
--- Desglose detallado de participación en álbumes
-SELECT 
-    al.album_id,
-    al.title as album_title,
-    ar.name as artist_name,
-    COUNT(DISTINCT s.song_id) as total_songs,
-    AVG(s.duration) as avg_song_duration
-FROM albums al
-JOIN artists ar ON al.artist_id = ar.artist_id
-LEFT JOIN songs s ON al.album_id = s.album_id
-GROUP BY al.album_id
-```
-**Uso**: Análisis de estructura y composición de álbumes
-
-### 🎯 Endpoints de Analytics Adicionales
-
-Además de las vistas SQL, el sistema incluye endpoints personalizados:
-
-#### **GET /api/analytics/genre-network**
-```javascript
-// Genera datos para el diagrama de red de géneros
-{
-  "nodes": [
-    { "genre_id": 1, "genre_name": "Rock", "artist_count": 40 }
-  ],
-  "links": [
-    { "source_genre_id": 1, "target_genre_id": 2, "connection_strength": 10 }
-  ]
-}
-```
-**Visualización**: Diagrama de red interactivo con D3.js
-- **Nodos**: Géneros (tamaño = cantidad de canciones)
-- **Conexiones**: Canciones que comparten ambos géneros (grosor = cantidad)
-- **Interactividad**: Arrastrar, zoom, tooltips
-
-#### **GET /api/analytics/low-success-songs**
-```javascript
-// Canciones con menor engagement (necesitan promoción)
-SELECT * FROM songs 
-WHERE success_score < threshold
-ORDER BY success_score ASC
-```
-
-#### **GET /api/analytics/top-liked-songs?limit=10**
-```javascript
-// Top canciones con más likes
-SELECT s.*, COUNT(l.like_id) as like_count
-FROM songs s
-LEFT JOIN likes l ON s.song_id = l.song_id
-GROUP BY s.song_id
-ORDER BY like_count DESC
-LIMIT ?
-```
-
-#### **GET /api/analytics/top-rated-albums?limit=15**
-```javascript
-// Álbumes mejor calificados por engagement
-SELECT al.*, 
-       COUNT(DISTINCT l.like_id) as total_likes,
-       COUNT(DISTINCT ps.playlist_id) as playlist_appearances
-FROM albums al
-JOIN songs s ON al.album_id = s.album_id
-LEFT JOIN likes l ON s.song_id = l.song_id
-LEFT JOIN playlist_songs ps ON s.song_id = ps.song_id
-GROUP BY al.album_id
-ORDER BY (total_likes + playlist_appearances) DESC
-```
-
-### 📊 Tecnologías de Visualización
-
-1. **Chart.js**: Gráficos de barras, líneas, y radar
-2. **Leaflet.js**: Mapas interactivos con marcadores
-3. **D3.js**: Diagrama de red de géneros con física de fuerzas
-4. **Bootstrap**: Layout responsive y componentes UI
-
-### 🔄 Flujo de Datos
-
-```
-[MySQL Database] 
-    ↓ (SQL Views)
-[Backend API (Express.js)]
-    ↓ (REST Endpoints)
-[Frontend (JavaScript)]
-    ↓ (Chart.js / D3.js / Leaflet)
-[Visualizaciones Interactivas]
-```
+- **Chart.js**: Gráficos de barras, líneas y radar
+- **Leaflet.js**: Mapas interactivos con marcadores
+- **D3.js v7**: Diagrama de red de géneros con física de fuerzas
+- **Bootstrap 5**: Layout responsive y componentes UI
 
 ## 🔧 Tecnologías Utilizadas
 
